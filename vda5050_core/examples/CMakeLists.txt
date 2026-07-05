@@ -53,3 +53,12 @@ install(TARGETS
     master_example
   DESTINATION lib/${PROJECT_NAME}
 )
+
+install(
+  DIRECTORY python/
+  DESTINATION share/${PROJECT_NAME}/examples/python
+  FILES_MATCHING
+    PATTERN "*.py"
+    PATTERN "*.yaml"
+    PATTERN "*.md"
+)
