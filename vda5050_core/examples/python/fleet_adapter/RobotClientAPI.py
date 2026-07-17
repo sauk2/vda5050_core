@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #
 # Copyright (C) 2026 ROS-Industrial Consortium Asia Pacific
 # Advanced Remanufacturing and Technology Centre
@@ -71,21 +72,16 @@ class RobotAPI:
         # ------------------------ #
         return True
 
-    # Kept as an optional integration hook; the current adapter example
-    # does not wire localization callbacks yet.
     def localize(
         self,
         robot_name: str,
         pose,
         map_name: str,
     ) -> bool:
-        """Request the robot to localize on target map."""
-        # ------------------------ #
-        # IMPLEMENT YOUR CODE HERE #
-        # ------------------------ #
+        """Localize the print-only robot at the requested pose."""
         print(
-            f'[{robot_name}] localize -> '
-            f'x={pose[0]:.2f} y={pose[1]:.2f} theta={pose[2]:.2f} '
+            f'[{robot_name}] localize -> ',
+            f'x={pose[0]:.2f} y={pose[1]:.2f} theta={pose[2]:.2f} ',
             f'map={map_name!r}',
             flush=True,
         )

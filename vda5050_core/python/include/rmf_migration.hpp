@@ -157,10 +157,16 @@ private:
   friend class FleetUpdateHandle;
 
   CommandExecution(
-    std::shared_ptr<client::adapter::Execution> execution,
+    std::shared_ptr<client::adapter::OrderExecution> execution,
+    ActivityIdentifier identifier);
+
+  CommandExecution(
+    std::shared_ptr<client::adapter::ActionExecution> execution,
     ActivityIdentifier identifier);
 
   std::shared_ptr<client::adapter::Execution> execution_;
+  std::function<void()> finished_;
+  std::function<void(const std::string&)> failed_;
   ActivityIdentifier identifier_;
 };
 

@@ -55,6 +55,19 @@ install(TARGETS
 )
 
 install(
+  PROGRAMS
+    python/fleet_adapter/fleet_adapter.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME fleet_adapter
+)
+
+install(
+  FILES
+    python/fleet_adapter/RobotClientAPI.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
   DIRECTORY python/
   DESTINATION share/${PROJECT_NAME}/examples/python
   FILES_MATCHING

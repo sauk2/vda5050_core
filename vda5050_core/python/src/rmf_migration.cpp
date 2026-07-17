@@ -200,19 +200,13 @@ bool ActivityIdentifier::operator!=(const ActivityIdentifier& other) const
 //=============================================================================
 void CommandExecution::finished()
 {
-  if (execution_)
-  {
-    execution_->finished();
-  }
+  if (finished_) finished_();
 }
 
 //=============================================================================
 void CommandExecution::failed(const std::string& reason)
 {
-  if (execution_)
-  {
-    execution_->failed(reason);
-  }
+  if (failed_) failed_(reason);
 }
 
 //=============================================================================
@@ -244,9 +238,24 @@ const ActivityIdentifier& CommandExecution::identifier() const
 
 //=============================================================================
 CommandExecution::CommandExecution(
-  std::shared_ptr<client::adapter::Execution> execution,
+  std::shared_ptr<client::adapter::OrderExecution> execution,
   ActivityIdentifier identifier)
-: execution_(std::move(execution)), identifier_(std::move(identifier))
+: execution_(execution),
+  finished_([execution]() { execution->finished(); }),
+  failed_([execution](const std::string& reason) { execution->failed(reason); }),
+  identifier_(std::move(identifier))
+{
+  // Nothing to do here ...
+}
+
+//=============================================================================
+CommandExecution::CommandExecution(
+  std::shared_ptr<client::adapter::ActionExecution> execution,
+  ActivityIdentifier identifier)
+: execution_(execution),
+  finished_([execution]() { execution->finished(); }),
+  failed_([execution](const std::string& reason) { execution->failed(reason); }),
+  identifier_(std::move(identifier))
 {
   // Nothing to do here ...
 }

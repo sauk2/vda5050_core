@@ -13,7 +13,7 @@ rmf_fleet:
       battery_soc: 1.0
       travel_time: 2.0  # print-only robot: delay per destination
       start:
-        map_name: "map1"
+        map_name: "map_1"
         x: 0.0
         y: 0.0
         theta: 0.0

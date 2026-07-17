@@ -1,85 +1,123 @@
 # VDA5050 Python Fleet Adapter Example
 
-The C++ core, exposed to Python as `vda5050_core_python`, handles the common
-VDA5050 behaviour, including:
+## 1. Overview
 
-* connecting to the MQTT broker;
-* receiving and validating VDA5050 orders;
-* dispatching route nodes in sequence;
-* publishing robot state.
+This example demonstrates how to build and run a Python fleet adapter using the `vda5050_core_python.rmf_migration` bindings.
 
-Robot-specific behaviour is implemented in `RobotClientAPI.py`.
+It is intended for developers who already have an Open-RMF-style Python robot integration, such as one based on the Open-RMF `fleet_adapter_template`.
 
-The provided implementation is a print-only robot, so no real robot or
-simulator is required. It prints each received command, waits for a configured
-travel time, updates its position in memory, and reports the command as
-completed.
+The example shows how to reuse an existing robot-specific `RobotAPI` while replacing the Open-RMF fleet-adapter layer with the VDA5050 client adapter.
 
-## Files
+After migration, robot commands are received from a VDA5050 master through MQTT instead of being dispatched through Open-RMF.
 
-* `RobotClientAPI.py`: defines how to communicate with the robot, including
-  navigation, stopping, actions, position, battery and command completion.
-  Edit this file by replacing the code under the `IMPLEMENT YOUR CODE HERE`
-  markers.
-* `config.yaml`: defines the fleet, robot identity, MQTT broker, starting pose
-  and simulated travel time. Edit this for your setup.
-* `fleet_adapter.py`: connects `RobotClientAPI.py` to the VDA5050 Python
-  bindings. You rarely need to edit this file.
-* `publish_demo_order.py`: publishes a demo VDA5050 order for testing. Edit
-  this only when changing the test route.
+The example demonstrates how to:
 
-## How It Works
+- configure a VDA5050 fleet and robot identity
+- connect to an MQTT broker
+- receive VDA5050 orders and instant actions
+- forward navigation, localization and robot-action requests to a Python `RobotAPI`
+- report position, battery state and command completion
+- run the adapter using `ros2 run`
 
-```text
-VDA5050 order
-    ->
+For a detailed comparison between the Open-RMF and VDA5050 adapter APIs, see the RMF migration guide.
+
+## 2. Architecture
+
+```
+VDA5050 master
+      |
+      | MQTT orders and instant actions
+      v
 vda5050_core Python bindings
-    ->
+      |
+      v
 fleet_adapter.py
-    ->
+      |
+      v
 RobotClientAPI.py
-    ->
-Print-only robot
+      |
+      v
+Robot or simulator
 ```
 
-Robot state travels in the opposite direction:
+Robot state flows in the opposite direction:
 
-```text
+```
 Robot position, battery and command status
-    ->
+      |
+      v
 RobotClientAPI.py
-    ->
+      |
+      v
 fleet_adapter.py
-    ->
+      |
+      v
 vda5050_core
-    ->
+      |
+      v
 VDA5050 state topic
 ```
 
-## Prerequisites
+
+
+## 3. Files
+
+
+
+### `RobotClientAPI.py`
+
+Defines the robot-specific interface used by the adapter, including:
+
+- localization
+- navigation
+- stopping
+- robot-specific actions
+- position and map retrieval
+- battery-state retrieval
+- command-completion checking
+
+Replace the code under the `IMPLEMENT YOUR CODE HERE` markers with calls to the real robot API.
+
+The included implementation is a print-only simulated robot that stores its state in memory, so the example can run without hardware.
+
+### `config.yaml`
+
+Defines:
+
+- fleet name
+- MQTT broker
+- MQTT client ID
+- VDA5050 manufacturer and serial number
+- robot starting pose
+- battery state
+- simulated travel time
+
+Update this file to match your robot and MQTT setup.
+
+### `fleet_adapter.py`
+
+Connects `RobotClientAPI.py` to the `vda5050_core_python.rmf_migration` bindings.
+
+It creates the adapter, registers robots, forwards callbacks, updates robot state and reports command completion.
+
+Most robot-specific communication should be implemented in `RobotClientAPI.py`. Modify `fleet_adapter.py` only when changing callback behaviour or adding custom action handling.
+
+## 4. Prerequisites
 
 The example requires:
 
-* ROS 2 Jazzy;
-* a built `vda5050_core` workspace;
-* an MQTT broker such as Mosquitto;
-* the Python packages `pyyaml` and `paho-mqtt`.
+- ROS 2 Jazzy
+- a built `vda5050_core` workspace
+- an MQTT broker such as Mosquitto
+- PyYAML
 
-Install the Python dependencies:
 
-```bash
-python3 -m pip install pyyaml paho-mqtt
-```
 
-Install Mosquitto and its command-line clients if they are not already
-available:
+## 5. Steps to run the Example
 
-```bash
-sudo apt update
-sudo apt install mosquitto mosquitto-clients
-```
 
-## Build the Workspace
+
+### 5.1 Build the Workspace
 
 Source ROS 2:
 
@@ -100,111 +138,19 @@ Source the built workspace:
 source install/setup.bash
 ```
 
-Check that the Python module can be imported:
+You normally only need to rebuild after changing the C++ code or Python bindings.
 
-```bash
-python3 -c "import vda5050_core_python; print('Import successful')"
+### 5.2 Configure the Fleet and Robot
+
+Open:
+
+```
+examples/python/fleet_adapter/config.yaml
 ```
 
-You normally only need to rebuild after changing the C++ code or Python
-bindings.
+Example configuration:
 
-## Source Each New Terminal
-
-Every new terminal that runs the adapter or imports
-`vda5050_core_python` must source both ROS 2 and the built workspace:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-source <workspace>/install/setup.bash
 ```
-
-Replace `<workspace>` with the actual path to your workspace.
-
-The Mosquitto broker terminal does not need the ROS 2 environment.
-
-## Run the Example
-
-Use three terminals.
-
-### Terminal 1 - Start the MQTT Broker
-
-```bash
-mosquitto -v
-```
-
-### Terminal 2 - Start the Fleet Adapter
-
-Source the environment:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-source <workspace>/install/setup.bash
-```
-
-Go to the example directory and run the adapter:
-
-```bash
-cd <path-to-vda5050_core>/examples/python/fleet_adapter
-python3 fleet_adapter.py -c config.yaml
-```
-
-Expected startup output:
-
-```text
-Added robot 'robot_1' - order topic: uagv/v2/Manufacturer/S001/order
-Fleet adapter running. Press Ctrl+C to stop.
-```
-
-### Terminal 3 - Publish a Demo Order
-
-Source the environment:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-source <workspace>/install/setup.bash
-```
-
-Go to the example directory and publish the order:
-
-```bash
-cd <path-to-vda5050_core>/examples/python/fleet_adapter
-python3 publish_demo_order.py
-```
-
-The fleet adapter terminal should print navigation commands similar to:
-
-```text
-[robot_1] navigate -> x=2.00 y=0.00 theta=0.00 map='map1' speed_limit=0.0
-[robot_1] navigate -> x=2.00 y=3.00 theta=1.57 map='map1' speed_limit=0.0
-[robot_1] navigate -> x=5.00 y=3.00 theta=0.00 map='map1' speed_limit=0.0
-```
-
-The print-only robot waits for the configured `travel_time` before reporting
-each navigation command as completed. After a node is completed, the C++ core
-dispatches the next node in the order.
-
-## View the Published Robot State
-
-Run the following command in another terminal:
-
-```bash
-mosquitto_sub -v -t 'uagv/v2/Manufacturer/S001/state'
-```
-
-The published state may include:
-
-* the current position;
-* battery state of charge;
-* current order information;
-* action and node states;
-* driving status, if it is reported by the adapter.
-
-## Configuration
-
-The example reads its settings from `config.yaml`.
-
-```yaml
 rmf_fleet:
   name: "demo_fleet"
   update_rate_hz: 5.0
@@ -232,85 +178,148 @@ fleet_manager:
 
 Important fields:
 
-* `name`: name of the fleet;
-* `update_rate_hz`: how often the Python update loop checks robot state and
-  command completion;
-* `robot_state_update_interval`: VDA5050 state update interval passed to the
-  C++ core;
-* `manufacturer`: VDA5050 manufacturer identifier;
-* `serial_number`: VDA5050 robot serial number;
-* `interface_name`: first section of the VDA5050 MQTT topic;
-* `version`: VDA5050 protocol version;
-* `battery_soc`: initial battery state of charge from `0.0` to `1.0`;
-* `travel_time`: simulated travel time for each destination;
-* `start`: initial map, position and orientation;
-* `broker_uri`: address of the MQTT broker;
-* `client_id_prefix`: MQTT client identifier used by the adapter.
+- `name`: fleet name 
+- `update_rate_hz`: frequency of robot-state and completion checks 
+- `robot_state_update_interval`: VDA5050 state update interval 
+- `manufacturer`: VDA5050 manufacturer identifier 
+- `serial_number`: VDA5050 robot serial number 
+- `interface_name`: first section of the MQTT topic 
+- `version`: VDA5050 protocol version 
+- `battery_soc`: initial battery state of charge from `0.0` to `1.0` 
+- `travel_time`: simulated travel time for each navigation command 
+- `start`: initial map and pose 
+- `broker_uri`: MQTT broker address 
+- `client_id_prefix`: MQTT client identifier 
 
-For this configuration, the VDA5050 order topic is:
+For this configuration, the order topic is:
 
-```text
+```
 uagv/v2/Manufacturer/S001/order
 ```
 
 The state topic is:
 
-```text
+```
 uagv/v2/Manufacturer/S001/state
 ```
 
-## Adapt the Example to a Real Robot
+### 5.3 Run the terminals
+
+Use three terminals.
+
+### Terminal 1 - Start the MQTT Broker
+
+```bash
+mosquitto -v
+```
+
+Leave this terminal running.
+
+### Terminal 2 - Run the Fleet Adapter
+
+Source the environment:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source <workspace>/install/setup.bash
+```
+
+Run the adapter:
+
+```bash
+ros2 run vda5050_core fleet_adapter
+```
+
+Expected startup output:
+
+```text
+Added robot 'robot_1' - order topic: uagv/v2/Manufacturer/S001/order
+MQTT client [demo_fleet_adapter] connected to tcp://localhost:1883
+Fleet adapter running. Press Ctrl+C to stop.
+```
+
+### Terminal 3 - Publish a Test Order
+
+Source the environment:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source <workspace>/install/setup.bash
+```
+
+Run the example order publisher:
+
+```bash
+ros2 run vda5050_core order_publisher
+```
+
+The fleet-adapter terminal should print messages similar to:
+
+```text
+Accepted new order [test_order]
+Dispatching node ID [N0] with sequence [0]
+[robot_1] navigate -> x=0.00 y=0.00 theta=0.00 map='map1'
+
+Dispatching node ID [N1] with sequence [2]
+[robot_1] navigate -> x=2.00 y=1.00 theta=0.00 map='map1'
+```
+
+The print-only robot waits for the configured `travel_time` before reporting each navigation command as completed.
+
+After one node is completed, the VDA5050 core dispatches the next node.
+
+## 6. View the Published Robot State
+
+Run the following command in another terminal:
+
+```bash
+mosquitto_sub -v -t 'uagv/v2/Manufacturer/S001/state'
+```
+
+The published state may include:
+
+- the current position;
+- battery state of charge;
+- current order information;
+- action and node states;
+- driving status, if it is reported by the adapter.
+
+## 7. Adapt the Example to a Real Robot
 
 Most robot-specific changes should be made in `RobotClientAPI.py`.
 
-Replace the print-only code under the `IMPLEMENT YOUR CODE HERE` markers with
-calls to the real robot interface.
+Replace the print-only implementation under the `IMPLEMENT YOUR CODE HERE` markers with calls to the real robot interface.
 
-Possible robot interfaces include:
+Possible interfaces include:
 
-* REST API;
-* WebSocket;
-* ROS 2 topics;
-* ROS 2 actions;
-* Nav2;
-* a vendor SDK;
-* Gazebo simulation.
+- REST APIs
+- WebSockets
+- ROS 2 topics
+- ROS 2 actions
+- Nav2
+- vendor SDKs
+- Gazebo simulations
 
-## Current Limitations
+The following methods should be connected to the real robot:
 
-### Stop Callback
+```
+check_connection()
+localize()
+navigate()
+start_activity()
+stop()
+position()
+battery_soc()
+get_map_name()
+is_command_completed()
+get_data()
+```
 
-The current C++ core does not connect stop or cancellation events to the
-Python stop callback.
+The adapter should only call `execution.finished()` after the robot has actually completed the navigation or action.
 
-The callback and `RobotAPI.stop()` method are included so the integration is
-ready when cancellation support is added.
+## 8. Stop the Example
 
-### Sending Another Order
-
-The current experimental core may retain the completed order as the active
-order.
-
-If a new order is ignored, restart the adapter before publishing another
-order.
-
-Depending on the intended order-update flow, another option is to reuse the
-same `orderId` with a higher `orderUpdateId`.
-
-### State Publishing
-
-State messages may be published when the robot state changes or when order
-events occur. They may not be published at a perfectly fixed frequency.
-
-### Print-Only Actions
-
-The print-only robot acknowledges actions immediately. A real robot
-integration should call `execution.finished()` only after the action has
-actually completed.
-
-## Stop the Example
-
-Press Ctrl+C in the fleet adapter terminal.
+Press `Ctrl+C` in the fleet adapter terminal.
 
 Expected output:
 

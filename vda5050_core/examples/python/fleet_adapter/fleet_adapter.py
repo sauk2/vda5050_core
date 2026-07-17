@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #
 # Copyright (C) 2026 ROS-Industrial Consortium Asia Pacific
 # Advanced Remanufacturing and Technology Centre
@@ -22,6 +23,7 @@ VDA5050 fleet adapter following the design pattern of the Open-RMF
 """
 
 from __future__ import annotations
+from ament_index_python.packages import get_package_share_directory
 
 import argparse
 import os
@@ -52,11 +54,13 @@ class RobotAdapter:
         self._lock = threading.Lock()
 
     def make_callbacks(self):
-        return rmf.RobotCallbacks(
+        callbacks = rmf.RobotCallbacks(
             self.navigate,
             self.stop,
             self.execute_action,
         )
+        callbacks.localize = self.localize
+        return callbacks
 
     def navigate(self, destination, execution):
         with self._lock:
@@ -76,6 +80,17 @@ class RobotAdapter:
             self.execution = None
         # TODO: call execution.failed(...) once stop/cancellation
         # support is connected through the core.
+
+    def localize(self, destination, execution):
+        """Forward an initPosition request to the robot API."""
+        if self.api.localize(
+            self.name,
+            destination.position,
+            destination.map,
+        ):
+            execution.finished()
+        else:
+            execution.failed("Robot rejected the localization request")
 
     def execute_action(
         self,
@@ -167,7 +182,14 @@ def main(argv=None):
     """Load the config, build the fleet, and run until interrupted."""
     argv = sys.argv if argv is None else argv
     parser = argparse.ArgumentParser(description='VDA5050 fleet adapter example')
-    default_config = os.path.join(os.path.dirname(__file__), 'config.yaml')
+    package_share = get_package_share_directory('vda5050_core')
+    default_config = os.path.join(
+        package_share,
+        'examples',
+        'python',
+        'fleet_adapter',
+        'config.yaml',
+    )
     parser.add_argument(
         '-c', '--config_file', default=default_config,
         help='path to config.yaml (default: alongside this script)',
