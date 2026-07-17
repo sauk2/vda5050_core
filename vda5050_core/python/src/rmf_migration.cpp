@@ -242,7 +242,8 @@ CommandExecution::CommandExecution(
   ActivityIdentifier identifier)
 : execution_(execution),
   finished_([execution]() { execution->finished(); }),
-  failed_([execution](const std::string& reason) { execution->failed(reason); }),
+  failed_(
+    [execution](const std::string& reason) { execution->failed(reason); }),
   identifier_(std::move(identifier))
 {
   // Nothing to do here ...
@@ -254,7 +255,8 @@ CommandExecution::CommandExecution(
   ActivityIdentifier identifier)
 : execution_(execution),
   finished_([execution]() { execution->finished(); }),
-  failed_([execution](const std::string& reason) { execution->failed(reason); }),
+  failed_(
+    [execution](const std::string& reason) { execution->failed(reason); }),
   identifier_(std::move(identifier))
 {
   // Nothing to do here ...
