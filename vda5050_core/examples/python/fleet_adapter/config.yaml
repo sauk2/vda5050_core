@@ -1,0 +1,24 @@
+# FLEET CONFIG =================================================================
+
+rmf_fleet:
+  name: "demo_fleet"
+  update_rate_hz: 5.0  # how often the adapter reports state / checks completion
+  robot_state_update_interval: 30  # VDA5050 state heartbeat interval (seconds)
+  robots:
+    robot_1:
+      manufacturer: "Manufacturer"
+      serial_number: "S001"
+      interface_name: "uagv"
+      version: "2.0.0"
+      battery_soc: 1.0
+      travel_time: 2.0  # print-only robot: delay per destination
+      start:
+        map_name: "map_1"
+        x: 0.0
+        y: 0.0
+        theta: 0.0
+
+# Connection between the adapter and the VDA5050 MQTT broker.
+fleet_manager:
+  broker_uri: "tcp://localhost:1883"
+  client_id_prefix: "demo_fleet_adapter"
