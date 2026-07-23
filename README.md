@@ -49,16 +49,16 @@ flowchart LR
 | Guide                                                              | Description                                               |
 | ------------------------------------------------------------------ | --------------------------------------------------------- |
 | **[Client Adapter Guide](vda5050_core/docs/client-adapter.md)**    | Step-by-step integration guide for AGV/AMR                |
-| **[Master Guide](vda5050_core/docs/master.md)**                    | Step-by-step guide to building a fleet master            |
-| **[Master API Reference](vda5050_core/docs/master-api.md)**        | Every master command, type and callback                  |
+| **[Master Guide](vda5050_core/docs/master.md)**                    | Step-by-step guide to building a master control           |
+| **[Master API Reference](vda5050_core/docs/master-api.md)**        | Master commands, types and callbacks                      |
 | **[Types and Serialization Guide](vda5050_core/docs/types.md)**    | Message structures, validation rules and JSON conversion  |
-| **[Validation Guide](vda5050_core/docs/validation.md)**            | Specification checks and how to read a result            |
+| **[Validation Guide](vda5050_core/docs/validation.md)**            | Validator checks, required inputs and results             |
 | **[Open-RMF Migration Guide](vda5050_core/docs/rmf-migration.md)** | Migrating an Open-RMF fleet adapter to a VDA5050 Adapter  |
 | **[Architecture and Design](vda5050_core/docs/design.md)**         | Architecture and design rationale                         |
 
 To connect an existing robot SDK, REST API or ROS 2 navigation system, start with the [Client Adapter Guide](vda5050_core/docs/client-adapter.md).
 
-To build a fleet control application, start with the [Master Guide](vda5050_core/docs/master.md).
+To build a master control, or integrate one into an existing application, start with the [Master Guide](vda5050_core/docs/master.md).
 
 ## Getting Started
 
